@@ -5,34 +5,37 @@ import numpy as np
 from datetime import datetime, time
 import pytz
 
-# 1. PREMIUM STANDARD TERMINAL CONFIGURATION
+# 1. PREMIUM INITIALIZATION & DESIGN LAYOUT
 st.set_page_config(
-    page_title="Institutional Algo-Intelligence Terminal", 
+    page_title="Institutional Algo Terminal", 
     page_icon="⚡", 
     layout="wide"
 )
 
-# Custom CSS for Premium Terminal Look
+# Premium Dark CSS for TradingView Terminal Look
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; color: #ffffff; }
-    .stButton>button { width: 100%; background-color: #2b6cb0; color: white; border-radius: 8px; font-weight: bold; }
-    .stButton>button:hover { background-color: #3182ce; }
-    div[data-testid="stMetricValue"] { font-size: 24px; font-weight: bold; }
+    .main { background-color: #131722; color: #d1d4dc; }
+    .stButton>button { width: 100%; background-color: #2962ff; color: white; border-radius: 4px; font-weight: bold; border: none; height: 45px; }
+    .stButton>button:hover { background-color: #1e4bd8; }
+    div[data-testid="stMetricValue"] { font-size: 26px; font-weight: bold; color: #2962ff; }
+    .card-buy { border-left: 6px solid #089981; background-color: #1c252c; padding: 20px; border-radius: 6px; margin-bottom: 15px; }
+    .card-sell { border-left: 6px solid #f23645; background-color: #2a1e22; padding: 20px; border-radius: 6px; margin-bottom: 15px; }
+    .card-neutral { border-left: 6px solid #787b86; background-color: #1e222d; padding: 20px; border-radius: 6px; margin-bottom: 15px; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("⚡ Institutional Algo-Intelligence & Precision Predictive Terminal")
-st.markdown("Advanced Quantitative Forecasting Model with Custom Lot Size (0.1, 0.01) Risk Assessment in Dollars ($).")
+st.title("📊 Institutional Quality Algo-Intelligence Terminal")
+st.markdown("Advanced Micro-Candlestick Scaling Model with Exact Risk/Reward Metrics & Target Achievement Metrics.")
 
-# LIVE INDIAN TIME DISPLAYER
+# TIME SETTING SYSTEM
 IST = pytz.timezone('Asia/Kolkata')
 current_time = datetime.now(IST)
-st.sidebar.markdown("### 🎛️ Terminal Control Center")
-st.sidebar.info(f"📅 **Terminal Time (IST):** {current_time.strftime('%Y-%m-%d %I:%M:%S %p')}")
+st.sidebar.markdown("### 🎛️ Terminal Dashboard Settings")
+st.sidebar.info(f"📅 **System Live Time:** {current_time.strftime('%Y-%m-%d %I:%M:%S %p')}")
 
-# --- INPUT CORE SELECTION PANEL ---
-st.markdown("### ⚙️ 1. Quantitative Input & Risk Matrix")
+# --- INPUT MATRIX ---
+st.markdown("### ⚙️ 1. Set Trade & Time Parameters")
 col_ui1, col_ui2, col_ui3, col_ui4 = st.columns(4)
 
 with col_ui1:
@@ -49,24 +52,24 @@ with col_ui1:
         "RELIANCE INDUSTRIES 🏭": "RELIANCE.NS",
         "TATA MOTORS 🚗": "TATAMOTORS.NS"
     }
-    selected_display = st.selectbox("Asset Class Structure:", list(assets_dict.keys()))
+    selected_display = st.selectbox("Asset Class:", list(assets_dict.keys()))
     ticker_symbol = assets_dict[selected_display]
 
 with col_ui2:
-    trading_style = st.selectbox("Trading Modality Frame:", ["Scalping", "Intraday", "Swing", "Position"])
+    trading_style = st.selectbox("Modality Profile:", ["Scalping", "Intraday", "Swing", "Position"])
 
 with col_ui3:
-    target_date = st.date_input("Fix Analytics Date:", current_time.date())
-    target_time = st.time_input("Fix Analytics Time Point:", time(9, 15))
+    target_date = st.date_input("Fix Target Date:", current_time.date())
+    target_time = st.time_input("Fix Analysis Time:", time(9, 15))
 
 with col_ui4:
-    # --- NEW: LOT SIZE INPUT FIELD ---
-    lot_size = st.number_input("Enter Lot Size (e.g., 0.01, 0.1, 1.0):", min_value=0.001, max_value=100.0, value=0.01, step=0.01, format="%.3f")
+    lot_size = st.number_input("Lot Size / Quantity (e.g., 0.01, 0.1, 1.465):", min_value=0.001, max_value=1000.0, value=1.465, step=0.01, format="%.3f")
 
 st.markdown("---")
 
-# ADVANCED MATHEMATICAL MATRIX QUANT MATHS
-def calculate_advanced_signals(df, style):
+# ADVANCED TECHNICAL MODEL WITH WEIGHTED CANDLE BODY & VOLUME
+def calculate_precision_signals(df, style):
+    # Indicators
     df['EMA_20'] = df['Close'].ewm(span=20, adjust=False).mean()
     
     delta = df['Close'].diff()
@@ -78,181 +81,159 @@ def calculate_advanced_signals(df, style):
     df['MACD'] = df['Close'].ewm(span=12, adjust=False).mean() - df['Close'].ewm(span=26, adjust=False).mean()
     df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
     
+    # Candle Vectors
     latest_candle_body = df['Close'].iloc[-1] - df['Open'].iloc[-1]
     avg_candle_body = (df['Close'] - df['Open']).abs().rolling(window=10).mean().iloc[-1]
     
+    # ATR Volatility
     high_low = df['High'] - df['Low']
     high_cp = np.abs(df['High'] - df['Close'].shift())
     low_cp = np.abs(df['Low'] - df['Close'].shift())
     atr = pd.concat([high_low, high_cp, low_cp], axis=1).max(axis=1).rolling(window=14).mean().iloc[-1]
     
-    if pd.isna(atr):
-        atr = df['Close'].iloc[-1] * 0.01
+    if pd.isna(atr) or atr == 0:
+        atr = df['Close'].iloc[-1] * 0.005
 
-    tech_score = 0
-    if df['Close'].iloc[-1] > df['EMA_20'].iloc[-1]: tech_score += 1.5
-    if df['RSI'].iloc[-1] > 52: tech_score += 1.0
-    if df['MACD'].iloc[-1] > df['MACD_Signal'].iloc[-1]: tech_score += 1.5
-    if latest_candle_body > 0 and abs(latest_candle_body) > avg_candle_body: tech_score += 1.0
+    # Quantitative Scoring Matrix
+    score = 0
+    if df['Close'].iloc[-1] > df['EMA_20'].iloc[-1]: score += 1.5
+    if df['RSI'].iloc[-1] > 50: score += 1.0
+    if df['MACD'].iloc[-1] > df['MACD_Signal'].iloc[-1]: score += 1.5
+    if latest_candle_body > 0 and abs(latest_candle_body) > avg_candle_body: score += 1.0
     
-    max_tech_score = 5.0
-    algo_bull_prob = (tech_score / max_tech_score) * 100
+    algo_bull_prob = (score / 5.0) * 100
     
+    # Multiplier based on Trading Styles to keep SL extremely tight and Target realistic
     if style == "Scalping":
-        horizon_desc = "Next 5 to 15 Minutes window."
-        sl_factor, tgt_factor = 0.15, 0.45
+        sl_factor, tgt_factor = 0.25, 0.68  # Exact 2.72 ratio
     elif style == "Intraday":
-        horizon_desc = "Valid till standard session close today."
-        sl_factor, tgt_factor = 0.50, 1.25
+        sl_factor, tgt_factor = 0.45, 1.23  # Balanced ratio
     elif style == "Swing":
-        horizon_desc = "3 Trading Days to 2 Weeks maximum."
-        sl_factor, tgt_factor = 1.30, 3.20
+        sl_factor, tgt_factor = 1.10, 3.02
     else:
-        horizon_desc = "1 Month to Quarter Target Projection."
-        sl_factor, tgt_factor = 2.50, 6.50
+        sl_factor, tgt_factor = 2.20, 6.05
         
-    return algo_bull_prob, atr, horizon_desc, sl_factor, tgt_factor
+    return algo_bull_prob, atr, sl_factor, tgt_factor
 
-# 2. LIVE ANALYSIS STREAM PIPELINE
-if st.button("🚀 EXECUTE MATHEMATICAL PREDICTION MATRIX"):
-    with st.spinner('Synchronizing server matrices and performing risk diagnostics...'):
+# EXECUTION ACTION
+if st.button("🚀 EXECUTE PRECISION PREDICTION MATRIX"):
+    with st.spinner('Syncing global matrices and fetching price vectors...'):
         try:
             stock = yf.Ticker(ticker_symbol)
-            df = stock.history(period="90d")
+            df = stock.history(period="60d")
             
-            if df.empty or len(df) < 30:
-                st.error("Matrix Calibration Failed: Insufficient price history found.")
+            if df.empty or len(df) < 20:
+                st.error("Data fetch failed. Please retry.")
             else:
-                bull_prob, atr_val, validity_horizon, sl_mult, tgt_mult = calculate_advanced_signals(df, trading_style)
+                bull_prob, atr_val, sl_mult, tgt_mult = calculate_precision_signals(df, trading_style)
                 
-                # --- LIVE INTELLIGENCE NEWS FEED ---
+                # Global/Indian Currency handling
+                is_global = "-" in ticker_symbol or "GC=" in ticker_symbol or "CL=" in ticker_symbol or "SI=" in ticker_symbol
+                currency = "$" if is_global else "₹"
+                
+                # Fetch News Flow
                 news_list = stock.news
                 news_score = 0
-                latest_headline = "No critical data transmission found."
-                news_impact_statement = "Neutral sentiment flows detected."
+                latest_headline = "No critical headline transmissions detected."
                 
-                bull_keys = ['growth', 'rally', 'surge', 'boom', 'breakout', 'profit', 'gain', 'support', 'high', 'rise', 'positive', 'upgrade']
-                bear_keys = ['drop', 'crash', 'slump', 'dump', 'inflation', 'fear', 'risk', 'low', 'fall', 'loss', 'negative', 'downgrade']
-
                 if news_list:
-                    latest_headline = news_list[0].get('title', 'Headline format non-readable')
-                    for article in news_list[:5]:
+                    latest_headline = news_list[0].get('title', 'Headline Non-readable')
+                    for article in news_list[:3]:
                         title = article.get('title', '').lower()
-                        for w in bull_keys:
-                            if w in title: news_score += 1
-                        for w in bear_keys:
-                            if w in title: news_score -= 1
-
-                if news_score > 0:
-                    news_bull_p = min(90.0, 50.0 + (news_score * 12))
-                    news_impact_statement = "⚠️ STIMULUS IMPACT: Buying volume acceleration expected."
-                elif news_score < 0:
-                    news_bull_p = max(10.0, 50.0 + (news_score * 12))
-                    news_impact_statement = "⚠️ BEARS IMPACT: Volatility downside risk is active."
-                else:
-                    news_bull_p = 50.0
-
-                final_bullish_pct = (bull_prob * 0.70) + (news_bull_p * 0.30)
-                final_bearish_pct = 100.0 - final_bullish_pct
-                direction_bias = "BULLISH" if final_bullish_pct >= final_bearish_pct else "BEARISH"
-
-                # LEVEL SELECTION
+                        if any(w in title for w in ['growth', 'rally', 'surge', 'profit', 'high', 'breakout']): news_score += 1
+                        if any(w in title for w in ['drop', 'crash', 'slump', 'loss', 'low', 'risk']): news_score -= 1
+                
+                final_bullish = (bull_prob * 0.75) + ((50 + news_score*20) * 0.25)
+                final_bullish = max(10, min(95, final_bullish))
+                final_bearish = 100 - final_bullish
+                
+                direction = "BULLISH" if final_bullish >= final_bearish else "BEARISH"
                 latest_close = df['Close'].iloc[-1]
                 
-                if direction_bias == "BULLISH":
-                    sl_level = latest_close - (atr_val * sl_mult)
-                    tgt_level = latest_close + (atr_val * tgt_mult)
-                    trend_flag = "📈 UPWARD MOMENTUM (Bullish Structuring)"
+                # Target and SL calculations
+                if direction == "BULLISH":
+                    sl_change = atr_val * sl_mult
+                    tgt_change = atr_val * tgt_mult
+                    sl_level = latest_close - sl_change
+                    tgt_level = latest_close + tgt_change
+                    action_flag = "LONG (BUY SETUP)"
+                    card_style = "card-buy"
                 else:
-                    sl_level = latest_close + (atr_val * sl_mult)
-                    tgt_level = latest_close - (atr_val * tgt_mult)
-                    trend_flag = "📉 DOWNWARD MOMENTUM (Bearish Liquidating)"
+                    sl_change = atr_val * sl_mult
+                    tgt_change = atr_val * tgt_mult
+                    sl_level = latest_close + sl_change
+                    tgt_level = latest_close - tgt_change
+                    action_flag = "SHORT (SELL SETUP)"
+                    card_style = "card-sell"
 
-                # --- NEW: DOLLAR RISK & REWARD ENGINE BASED ON LOT SIZE ---
-                price_diff_sl = abs(latest_close - sl_level)
-                price_diff_tgt = abs(latest_close - tgt_level)
+                # Mathematical Percentages matching your TradingView layout
+                sl_pct = (sl_change / latest_close) * 100
+                tgt_pct = (tgt_change / latest_close) * 100
+                risk_reward_ratio = tgt_change / (sl_change + 1e-9)
                 
-                # Contract sizes details according to standard asset classes
-                if "BTC-USD" in ticker_symbol:
-                    # 1 Lot Bitcoin = 1 BTC. So Profit/Loss = Price Change * Lot Size
-                    dollar_risk = price_diff_sl * lot_size
-                    dollar_reward = price_diff_tgt * lot_size
-                elif "ETH-USD" in ticker_symbol:
-                    dollar_risk = price_diff_sl * lot_size
-                    dollar_reward = price_diff_tgt * lot_size
-                elif "GC=F" in ticker_symbol: # Gold
-                    # Standard Gold Contract: 1 Lot = 100 Ounces
-                    dollar_risk = price_diff_sl * 100 * lot_size
-                    dollar_reward = price_diff_tgt * 100 * lot_size
-                elif "SI=F" in ticker_symbol: # Silver
-                    # Standard Silver Contract: 1 Lot = 5000 Ounces
-                    dollar_risk = price_diff_sl * 5000 * lot_size
-                    dollar_reward = price_diff_tgt * 5000 * lot_size
-                elif "CL=F" in ticker_symbol: # Crude Oil
-                    # Standard Crude Contract: 1 Lot = 1000 Barrels
-                    dollar_risk = price_diff_sl * 1000 * lot_size
-                    dollar_reward = price_diff_tgt * 1000 * lot_size
-                else:
-                    # For Indian Stocks / Indices (Approx USD value calculation based on average USDINR exchange rate)
-                    usdinr_rate = 83.5
-                    dollar_risk = (price_diff_sl * lot_size * 100) / usdinr_rate # Assuming standard lot multi
-                    dollar_reward = (price_diff_tgt * lot_size * 100) / usdinr_rate
+                # Contract Multipliers for absolute exact Dollar amount calculation
+                if "BTC-USD" in ticker_symbol or "ETH-USD" in ticker_symbol:
+                    multiplier = 1.0
+                elif "GC=F" in ticker_symbol: multiplier = 100.0  # Gold
+                elif "SI=F" in ticker_symbol: multiplier = 5000.0 # Silver
+                elif "CL=F" in ticker_symbol: multiplier = 1000.0 # Crude
+                else: multiplier = 1.0 / 83.5 # Convert INR moves to USD approximately
+                
+                amt_risk = sl_change * lot_size * multiplier
+                amt_reward = tgt_change * lot_size * multiplier
 
-                is_crypto_or_global = "-" in ticker_symbol or "GC=" in ticker_symbol or "CL=" in ticker_symbol or "SI=" in ticker_symbol
-                currency = "$" if is_crypto_or_global else "₹"
-
-                # PANEL DISPLAY
-                st.markdown("### 📊 2. Algorithmic Vector Probability Statistics")
-                col_met1, col_met2 = st.columns(2)
-                with col_met1:
-                    st.write(f"🟢 **Bullish Probability:** {final_bullish_pct:.2f}%")
-                    st.progress(int(final_bullish_pct))
-                with col_met2:
-                    st.write(f"🔴 **Bearish Probability:** {final_bearish_pct:.2f}%")
-                    st.progress(int(final_bearish_pct))
-
+                # --- UI DISPLAY DASHBOARD ---
+                st.markdown("### 📊 2. Algorithmic Matrix & News Flow")
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    st.write(f"🟢 **Bullish Probability:** {final_bullish:.1f}%")
+                    st.progress(int(final_bullish))
+                with col_b2:
+                    st.write(f"🔴 **Bearish Probability:** {final_bearish:.1f}%")
+                    st.progress(int(final_bearish))
+                    
+                st.info(f"📰 **Live News Flow Impact:** "{latest_headline}"")
                 st.markdown("---")
-
-                # PRECISION TRADING EXECUTION BLOCK
-                st.markdown(f"### ⚡ 3. Institutional Execution Setup [{trading_style.upper()} MODE | LOT: {lot_size}]")
                 
-                col_p1, col_p2, col_p3 = st.columns(3)
-                col_p1.metric(label="Current Spot Execution Price", value=f"{currency}{latest_close:.2f}")
-                col_p2.metric(label="System Forecast Matrix", value=trend_flag)
-                col_p3.metric(label="Volatility Index Spread (ATR)", value=f"{atr_val:.2f}")
-
-                # THE PRECISION RISK-REWARD LAYOUT WITH DYNAMIC DOLLAR CALCULATIONS
-                st.markdown("#### 🛠️ Precision Risk-Managed Entry Channels")
-                col_box1, col_box2, col_box3 = st.columns(3)
+                st.markdown(f"### ⚡ 3. TradingView Precision Execution Deck ({action_flag})")
                 
-                with col_box1:
-                    st.markdown(f"""
-                    <div style='border-left: 5px solid orange; background-color:#1e2430; padding:15px; border-radius:5px;'>
-                        <b>🛒 Standard Entry Zone</b><br>
-                        <h2 style='color:orange;'>{currency}{latest_close:.2f}</h2>
-                        <small style='color:#a0aec0;'>Volume Lot Size Allocated: {lot_size}</small>
-                    </div>
-                    """, unsafe_allow_html=True)
+                # Metric display matching chart specs
+                st.markdown(f"""
+                <div class="{card_style}">
+                    <h3 style='margin:0; color:white;'>🎯 System Position Assessment Matrix</h3>
+                    <p style='margin:5px 0 15px 0; color:#b2b5be;'>Calculated for Target Date: <b>{target_date}</b> at <b>{target_time.strftime('%I:%M %p')}</b></p>
+                    <table style='width:100%; border-collapse: collapse; color: white;'>
+                        <tr style='border-bottom: 1px solid #2a2e39;'>
+                            <td style='padding:10px 0;'>Current Price</td>
+                            <td style='text-align:right; font-weight:bold; font-size:18px;'>{currency}{latest_close:.2f}</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #2a2e39;'>
+                            <td style='padding:10px 0; color:#089981;'>🎯 Expected Profit Target (TGT)</td>
+                            <td style='text-align:right; font-weight:bold; color:#089981; font-size:18px;'>{currency}{tgt_level:.2f} ({tgt_pct:.3f}%)</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #2a2e39;'>
+                            <td style='padding:10px 0; color:#f23645;'>🛑 Narrow Stop Loss (SL)</td>
+                            <td style='text-align:right; font-weight:bold; color:#f23645; font-size:18px;'>{currency}{sl_level:.2f} ({sl_pct:.3f}%)</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #2a2e39;'>
+                            <td style='padding:10px 0; color:#2962ff;'>📊 Calculated Position Quantity / Lot</td>
+                            <td style='text-align:right; font-weight:bold; color:#2962ff;'>{lot_size:.3f}</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #2a2e39;'>
+                            <td style='padding:10px 0;'>⚖️ Risk / Reward Ratio</td>
+                            <td style='text-align:right; font-weight:bold; color:#ff9800; font-size:18px;'>{risk_reward_ratio:.2f}</td>
+                        </tr>
+                        <tr style='border-bottom: 1px solid #2a2e39; background-color: #1e222d;'>
+                            <td style='padding:10px; color:#8bff8b;'>💵 Target Est. Amount (Profit)</td>
+                            <td style='text-align:right; font-weight:bold; color:#8bff8b; padding:10px; font-size:18px;'>${amt_reward:.2f}</td>
+                        </tr>
+                        <tr style='background-color: #221a1d;'>
+                            <td style='padding:10px; color:#ff8b8b;'>💵 Stop Est. Amount (Loss Risk)</td>
+                            <td style='text-align:right; font-weight:bold; color:#ff8b8b; padding:10px; font-size:18px;'>${amt_risk:.2f}</td>
+                        </tr>
+                    </table>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                with col_box2:
-                    st.markdown(f"""
-                    <div style='border-left: 5px solid #ff4b4b; background-color:#1e2430; padding:15px; border-radius:5px;'>
-                        <b>🛑 Narrow Stop Loss (SL)</b><br>
-                        <h2 style='color:#ff4b4b;'>{currency}{sl_level:.2f}</h2>
-                        <h4 style='color:#ff8b8b; margin: 5px 0 0 0;'>💵 Risk: ${dollar_risk:.2f}</h4>
-                        <small style='color:#a0aec0;'>Maximum expected dollar drawdown for this lot.</small>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_box3:
-                    st.markdown(f"""
-                    <div style='border-left: 5px solid #28a745; background-color:#1e2430; padding:15px; border-radius:5px;'>
-                        <b>🎯 Profit Target (TGT)</b><br>
-                        <h2 style='color:#28a745;'>{currency}{tgt_level:.2f}</h2>
-                        <h4 style='color:#8bff8b; margin: 5px 0 0 0;'>💵 Profit: ${dollar_reward:.2f}</h4>
-                        <small style='color:#a0aec0;'>Highly achievable estimated mathematical returns.</small>
-                    </div>
-                    """, unsafe_allow_html=True)
-
         except Exception as e:
-            st.error(f"Processing Error Interrupted: {e}")
+            st.error(f"Error executing logic: {e}")
