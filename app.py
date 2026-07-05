@@ -1,169 +1,167 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-from datetime import datetime, timedelta
+import numpy as np
+from datetime import datetime
 import pytz
 
-# 1. PAGE SETUP
-st.set_page_config(page_title="Advanced Smart Market Predictor", page_icon="🔮", layout="centered")
+# PAGE CONFIGURATION
+st.set_page_config(page_title="Pro Algo-Intelligence Predictor", page_icon="📈", layout="wide")
 
-st.title("🔮 AI Smart Market & Forex Predictor")
-st.markdown("Apni marzi ki **Date aur Time** chunin, aur system apne smart algorithm se us time frame ka analysis karega.")
+st.title("🚀 Pro Algo-Intelligence & Trading Strategy Predictor")
+st.markdown("Yeh system fixed-time news aur dynamic calculation ke basis par exact trading levels provide karta hai.")
 
 # LIVE INDIAN TIME DISPLAY
 IST = pytz.timezone('Asia/Kolkata')
 current_time = datetime.now(IST)
-st.sidebar.info(f"📅 **Live Time (IST):** {current_time.strftime('%Y-%m-%d %I:%M %p')}")
+st.sidebar.info(f"📅 **System Time (IST):** {current_time.strftime('%Y-%m-%d %I:%M %p')}")
 
-# --- NEW: DATE & TIME FIXING SELECTION INTERFACE ---
-st.subheader("⚙️ Analysis Settings (Time & Date Fix Karein)")
+# --- DYNAMIC ASSETS MAPPING ---
+assets_dict = {
+    "1. Bitcoin (BTC-USD) ⚡": "BTC-USD",
+    "2. Gold (XAUUSD=X) 🪙": "GC=F",
+    "3. Silver (XAGUSD=X) 🥈": "SI=F",
+    "4. Crude Oil 🛢️": "CL=F",
+    "5. Ethereum (ETH-USD) 💎": "ETH-USD",
+    "6. NIFTY 50 🇮🇳": "^NSEI",
+    "7. BANK NIFTY 🇮🇳": "^NSEBANK",
+    "8. SENSEX 🇮🇳": "^BSESN",
+    "9. SBI (SBIN.NS) 🏦": "SBIN.NS",
+    "10. RELIANCE INDUSTRIES 🏭": "RELIANCE.NS",
+    "11. TATA MOTORS 🚗": "TATAMOTORS.NS"
+}
 
-# Kal ki date tak ka data select karne ke liye default values
-default_start_date = current_time.date() - timedelta(days=30)
-default_end_date = current_time.date()
+# USER INTERFACE - MAIN SETTINGS
+st.subheader("⚙️ 1. Asset & Target Configuration")
+col_ui1, col_ui2, col_ui3 = st.columns(3)
 
-col_date1, col_date2 = st.columns(2)
-with col_date1:
-    start_date = st.date_input("Kab se start karna hai? (Start Date)", default_start_date)
-with col_date2:
-    end_date = st.date_input("Kab tak ka check karna hai? (End Date)", default_end_date)
+with col_ui1:
+    selected_display = st.selectbox("Select Stock / Index / Forex:", list(assets_dict.keys()))
+    ticker_symbol = assets_dict[selected_display]
 
-# Error validation agar user galat date chunta hai
-if start_date > end_date:
-    st.error("❌ Error: Start Date, End Date se pehle ki honi chahiye!")
+with col_ui2:
+    target_date = st.date_input("Fix Prediction Date:", current_time.date())
+
+with col_ui3:
+    trading_style = st.selectbox("Choose Trading Style:", ["Scalping (Minutes)", "Intraday (1 Day)", "Swing (Days-Weeks)", "Position (Weeks-Months)"])
 
 st.markdown("---")
 
-# TECHNICAL INDICATORS FUNCTIONS
-def calculate_rsi(series, period=14):
-    delta = series.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / (loss + 1e-9)
-    return 100 - (100 / (1 + rs))
+# TECHNICAL MATHEMATICAL ENGINES
+def calculate_atr(df, period=14):
+    """Volatility tracking for accurate Stop Loss and Target calculations"""
+    high_low = df['High'] - df['Low']
+    high_cp = np.abs(df['High'] - df['Close'].shift())
+    low_cp = np.abs(df['Low'] - df['Close'].shift())
+    df_tr = pd.concat([high_low, high_cp, low_cp], axis=1)
+    true_range = np.max(df_tr, axis=1)
+    atr = true_range.rolling(window=period).mean()
+    return atr.iloc[-1] if not pd.isna(atr.iloc[-1]) else (df['Close'].iloc[-1] * 0.01)
 
-def calculate_macd(series):
-    exp1 = series.ewm(span=12, adjust=False).mean()
-    exp2 = series.ewm(span=26, adjust=False).mean()
-    macd = exp1 - exp2
-    signal = macd.ewm(span=9, adjust=False).mean()
-    return macd, signal
-
-# 2. GLOBAL & INDIAN ASSETS DICTIONARY
-global_assets = {
-    "Nifty 50 Index 🇮🇳": "^NSEI",
-    "Bank Nifty Index 🇮🇳": "^NSEBANK",
-    "Gold (Sona) 🪙": "GC=F",
-    "Silver (Chandi) 🥈": "SI=F",
-    "Crude Oil (Kacha Tel) 🛢️": "CL=F",
-    "Bitcoin (BTC-USD) ⚡": "BTC-USD",
-    "Ethereum (ETH-USD) 💎": "ETH-USD",
-    "Reliance Industries 🇮🇳": "RELIANCE.NS",
-    "Tata Motors 🇮🇳": "TATAMOTORS.NS"
-}
-
-selected_asset = st.selectbox("Apna Asset/Stock Select Karein:", list(global_assets.keys()))
-ticker_symbol = global_assets[selected_asset]
-
-# Custom Ticker Input Box
-custom_ticker = st.text_input("Ya koi dusra custom ticker daalein (e.g., SBIN.NS ya EURUSD=X):", "")
-if custom_ticker:
-    ticker_symbol = custom_ticker.upper()
-
-# 3. LIVE SMART ANALYSIS LOGIC
-if st.button("🔍 Run Smart Intelligence Analysis"):
-    if start_date >= end_date:
-        st.warning("Kripya sahi date range select karein.")
-    else:
-        with st.spinner('Fix kiye gaye time frame ka data calculate ho raha hai...'):
-            try:
-                stock = yf.Ticker(ticker_symbol)
+# CORE INTELLIGENCE BUTTON
+if st.button("🔥 Run Professional Strategy Engine"):
+    with st.spinner('Calculating target levels and parsing news intelligence...'):
+        try:
+            stock = yf.Ticker(ticker_symbol)
+            df = stock.history(period="30d")
+            
+            if df.empty:
+                st.error("Data load nahi ho saka. Ticker verification check karein.")
+            else:
+                latest_close = df['Close'].iloc[-1]
+                atr_value = calculate_atr(df)
                 
-                # User ki select ki hui date range ke mutabik data fetch karna
-                df = stock.history(start=start_date, end=end_date)
+                # --- PURE CURRENT NEWS IMPACT INTELLIGENCE ---
+                news_list = stock.news
+                news_score = 0
+                scanned_count = 0
                 
-                if df.empty or len(df) < 15:
-                    st.error(f"❌ Selected Date Range ({start_date} se {end_date}) ke beech ka paryapt (enough) data nahi mila. Kripya date range badhayein.")
+                bullish_keywords = ['growth', 'rally', 'surge', 'boom', 'breakout', 'profit', 'gain', 'support', 'high', 'rise', 'positive', 'upgrade']
+                bearish_keywords = ['drop', 'crash', 'slump', 'dump', 'inflation', 'fear', 'risk', 'low', 'fall', 'loss', 'negative', 'downgrade']
+
+                if news_list:
+                    for article in news_list[:5]:
+                        title = article.get('title', '').lower()
+                        scanned_count += 1
+                        for word in bullish_keywords:
+                            if word in title: news_score += 1
+                        for word in bearish_keywords:
+                            if word in title: news_score -= 1
+
+                # Exact Percentage distribution based strictly on latest news analysis
+                if news_score > 0:
+                    bullish_pct = min(85.0, 50.0 + (news_score * 10))
+                elif news_score < 0:
+                    bullish_pct = max(15.0, 50.0 + (news_score * 10))
                 else:
-                    # 4. ALGORITHM ENGINE CALCULATIONS
-                    df['SMA_20'] = df['Close'].rolling(window=min(20, len(df))).mean()
-                    df['RSI'] = calculate_rsi(df['Close'], period=min(14, len(df)-1))
-                    df['MACD'], df['MACD_Signal'] = calculate_macd(df['Close'])
+                    bullish_pct = 50.0
                     
-                    latest_close = df['Close'].iloc[-1]
-                    rsi = df['RSI'].iloc[-1]
-                    macd = df['MACD'].iloc[-1]
-                    macd_signal = df['MACD_Signal'].iloc[-1]
-                    sma_20 = df['SMA_20'].iloc[-1] if not pd.isna(df['SMA_20'].iloc[-1]) else latest_close
-                    
-                    # Smart Intelligence Signals Scoring
-                    bullish_signals = 0
-                    total_signals = 3
-                    
-                    if latest_close > sma_20: bullish_signals += 1
-                    if rsi > 50: bullish_signals += 1
-                    if macd > macd_signal: bullish_signals += 1
-                    
-                    algo_bullish_pct = (bullish_signals / total_signals) * 100
-                    algo_bearish_pct = 100 - algo_bullish_pct
+                bearish_pct = 100.0 - bullish_pct
+                
+                # --- TRADING HORIZON PREDICTION TIME ---
+                if trading_style == "Scalping (Minutes)":
+                    time_horizon = "5 Mins to 15 Mins maximum."
+                    sl_multiplier, tgt_multiplier = 0.2, 0.4
+                elif trading_style == "Intraday (1 Day)":
+                    time_horizon = "Till Market Closing Today."
+                    sl_multiplier, tgt_multiplier = 0.6, 1.2
+                elif trading_style == "Swing (Days-Weeks)":
+                    time_horizon = "3 Days to 2 Weeks."
+                    sl_multiplier, tgt_multiplier = 1.5, 3.0
+                else:
+                    time_horizon = "1 Month to 3 Months."
+                    sl_multiplier, tgt_multiplier = 3.0, 6.0
 
-                    # 5. NEWS INTELLIGENCE BIAS
-                    news_list = stock.news
-                    news_bullish_pct, news_bearish_pct = 50.0, 50.0
-                    
-                    bullish_keywords = ['growth', 'rally', 'surge', 'boom', 'breakout', 'profit', 'gain', 'support', 'high', 'rise']
-                    bearish_keywords = ['drop', 'crash', 'slump', 'dump', 'inflation', 'fear', 'risk', 'low', 'fall', 'loss']
+                # MATHEMATICAL POSITION ARCHITECTURE (Target & Stop Loss Engine)
+                is_bullish = bullish_pct > bearish_pct
+                currency_symbol = "$" if ("-" in ticker_symbol or "GC=" in ticker_symbol or "CL=" in ticker_symbol) else "₹"
+                
+                if is_bullish:
+                    trade_direction = "BUY (Long Position)"
+                    stop_loss = latest_close - (atr_value * sl_multiplier)
+                    target_level = latest_close + (atr_value * tgt_multiplier)
+                else:
+                    trade_direction = "SELL (Short Position)"
+                    stop_loss = latest_close + (atr_value * sl_multiplier)
+                    target_level = latest_close - (atr_value * tgt_multiplier)
 
-                    if news_list:
-                        news_score = 0
-                        for article in news_list[:5]:
-                            title = article.get('title', '').lower()
-                            for word in bullish_keywords:
-                                if word in title: news_score += 1
-                            for word in bearish_keywords:
-                                if word in title: news_score -= 1
-                                
-                        if news_score > 0:
-                            news_bullish_pct, news_bearish_pct = 75.0, 25.0
-                        elif news_score < 0:
-                            news_bullish_pct, news_bearish_pct = 25.0, 75.0
-
-                    # FINAL WEIGHTED PERCENTAGE (60% Tech Algo + 40% Intelligence News)
-                    final_bullish = (algo_bullish_pct * 0.60) + (news_bullish_pct * 0.40)
-                    final_bearish = (algo_bearish_pct * 0.60) + (news_bearish_pct * 0.40)
-
-                    # INTERFACE DISPLAY
-                    st.success(f"✅ Data processed successfully for range: {start_date} to {end_date}")
+                # DISPLAY DASHBOARD PANELS
+                st.markdown("### 📊 2. News Intelligence Analysis Engine")
+                col_res1, col_res2 = st.columns(2)
+                
+                with col_res1:
+                    st.write(f"🟢 **Bullish Probability:** {bullish_pct:.1f}%")
+                    st.progress(int(bullish_pct))
+                with col_res2:
+                    st.write(f"🔴 **Bearish Probability:** {bearish_pct:.1f}%")
+                    st.progress(int(bearish_pct))
                     
-                    col1, col2, col3 = st.columns(3)
-                    if "$" in ticker_symbol or "=" in ticker_symbol or "GC" in ticker_symbol or "CL" in ticker_symbol:
-                        col1.metric("Closing Price", f"${latest_close:.2f}")
-                    else:
-                        col1.metric("Closing Price", f"₹{latest_close:.2f}")
-                        
-                    col2.metric("RSI (Strength)", f"{rsi:.2f}")
-                    col3.metric("Trend Status", "🟢 Bullish" if macd > macd_signal else "🔴 Bearish")
-
-                    st.markdown("---")
+                st.info(f"⏳ **Prediction Validity Horizon:** Yeh trend **{time_horizon}** tak active reh sakta hai.")
+                st.markdown("---")
+                
+                # PROFESSIONAL TRADING SIGNALS FRAMEWORK
+                st.markdown(f"### ⚡ 3. Professional Execution Setup ({trading_style})")
+                
+                col_m1, col_m2, col_m3 = st.columns(3)
+                col_m1.metric(label="Current Execution Price", value=f"{currency_symbol}{latest_close:.2f}")
+                
+                if is_bullish:
+                    col_m2.metric(label="Recommended Action", value=trade_direction, delta="📈 BULLISH BIAS")
+                else:
+                    col_m2.metric(label="Recommended Action", value=trade_direction, delta="-📉 BEARISH BIAS", delta_color="inverse")
                     
-                    # PERCENTAGE OUTPUT BARS
-                    st.subheader("📊 Smart AI Intelligence Results")
+                col_m3.metric(label="Calculated Volatility (ATR)", value=f"{atr_value:.2f}")
+                
+                # TARGET AND STOP LOSS BOXES
+                st.markdown("#### 🛠️ Entry Levels Layout")
+                col_box1, col_box2 = st.columns(2)
+                
+                with col_box1:
+                    st.error(f"🚫 **Strict Stop Loss (SL):** {currency_symbol}{stop_loss:.2f}")
+                with col_box2:
+                    st.success(f"🎯 **Expected Profit Target (TGT):** {currency_symbol}{target_level:.2f}")
                     
-                    st.write(f"🟢 **BULLISH Percentage: {final_bullish:.2f}%**")
-                    st.progress(int(final_bullish))
-                    
-                    st.write(f"🔴 **BEARISH Percentage: {final_bearish:.2f}%**")
-                    st.progress(int(final_bearish))
-                    
-                    st.markdown("---")
-                    
-                    # FINAL CONCLUSION BOX
-                    if abs(final_bullish - final_bearish) < 5:
-                        st.warning("⚖️ **INTELLIGENCE CONCLUSION: NEUTRAL** (Market rangebound ya sideways trend mein hai)")
-                    elif final_bullish > final_bearish:
-                        st.success("📈 **INTELLIGENCE CONCLUSION: STRONG BULLISH** (Aapke chune gaye samay ke hisab se market tezi ki taraf jhuka hai)")
-                    else:
-                        st.error("📉 **INTELLIGENCE CONCLUSION: STRONG BEARISH** (Aapke chune gaye samay ke hisab se market mandi ki taraf jhuka hai)")
-
-            except Exception as e:
-                st.error(f"Analysis karne mein dikkat aayi: {e}")
+                st.caption("💡 Tip: Yeh targets mathematically Volatility Indicator (ATR) ke data par calculated hain, jo risk-to-reward ratio ko maintain karte hain.")
+                
+        except Exception as e:
+            st.error(f"Calculation Error: {e}")
