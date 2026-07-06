@@ -32,7 +32,7 @@ st.markdown("Advanced Micro-Candlestick Scaling Model with Exact Risk/Reward Met
 IST = pytz.timezone('Asia/Kolkata')
 current_time = datetime.now(IST)
 st.sidebar.markdown("### 🎛️ Terminal Dashboard Settings")
-st.sidebar.info(f"📅 **System Live Time:** {current_time.strftime('%Y-%m-%d %I:%M:%S %p')}")
+st.sidebar.info(f"📅 **System Live Time:** {current_time.strftime('%Y-%m-%d %I:%M %p')}")
 
 # --- INPUT MATRIX ---
 st.markdown("### ⚙️ 1. Set Trade & Time Parameters")
@@ -105,9 +105,9 @@ def calculate_precision_signals(df, style):
     
     # Multiplier based on Trading Styles to keep SL extremely tight and Target realistic
     if style == "Scalping":
-        sl_factor, tgt_factor = 0.25, 0.68  # Exact 2.72 ratio
+        sl_factor, tgt_factor = 0.25, 0.68  # Exact 2.72 ratio matching your chart setup
     elif style == "Intraday":
-        sl_factor, tgt_factor = 0.45, 1.23  # Balanced ratio
+        sl_factor, tgt_factor = 0.45, 1.23  
     elif style == "Swing":
         sl_factor, tgt_factor = 1.10, 3.02
     else:
@@ -174,10 +174,10 @@ if st.button("🚀 EXECUTE PRECISION PREDICTION MATRIX"):
                 # Contract Multipliers for absolute exact Dollar amount calculation
                 if "BTC-USD" in ticker_symbol or "ETH-USD" in ticker_symbol:
                     multiplier = 1.0
-                elif "GC=F" in ticker_symbol: multiplier = 100.0  # Gold
-                elif "SI=F" in ticker_symbol: multiplier = 5000.0 # Silver
-                elif "CL=F" in ticker_symbol: multiplier = 1000.0 # Crude
-                else: multiplier = 1.0 / 83.5 # Convert INR moves to USD approximately
+                elif "GC=F" in ticker_symbol: multiplier = 100.0  
+                elif "SI=F" in ticker_symbol: multiplier = 5000.0 
+                elif "CL=F" in ticker_symbol: multiplier = 1000.0 
+                else: multiplier = 1.0 / 83.5 
                 
                 amt_risk = sl_change * lot_size * multiplier
                 amt_reward = tgt_change * lot_size * multiplier
@@ -192,7 +192,7 @@ if st.button("🚀 EXECUTE PRECISION PREDICTION MATRIX"):
                     st.write(f"🔴 **Bearish Probability:** {final_bearish:.1f}%")
                     st.progress(int(final_bearish))
                     
-                st.info(f"📰 **Live News Flow Impact:** "{latest_headline}"")
+                st.info(f"📰 **Live News Flow Impact:** \"{latest_headline}\"")
                 st.markdown("---")
                 
                 st.markdown(f"### ⚡ 3. TradingView Precision Execution Deck ({action_flag})")
