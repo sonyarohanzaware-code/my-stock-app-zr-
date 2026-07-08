@@ -63,7 +63,7 @@ with col_ui3:
     target_time = st.time_input("Fix Analysis Time:", time(9, 15))
 
 with col_ui4:
-    lot_size = st.number_input("Lot Size / Quantity (e.g., 0.01, 0.1, 1):", min_value=0.001, max_value=1000.0, value=1, step=0.01, format="%.3f")
+    lot_size = st.number_input("Lot Size / Quantity (e.g., 0.01, 0.1, 1):", min_value=0.001, max_value=1000.0, value=1.465, step=0.01, format="%.3f")
 
 st.markdown("---")
 
