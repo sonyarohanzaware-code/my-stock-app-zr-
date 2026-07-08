@@ -40,11 +40,11 @@ col_ui1, col_ui2, col_ui3, col_ui4 = st.columns(4)
 
 with col_ui1:
     assets_dict = {
-        "Bitcoin (BTC-USD) ⚡": "BTC-USD",
-        "Gold (XAUUSD=X) 🪙": "GC=F",
-        "Silver (XAGUSD=X) 🥈": "SI=F",
+        "Bitcoin (BTCUSD) ⚡": "BTCUSD",
+        "Gold (XAUUSD) 🪙": "GC=F",
+        "Silver (XAGUSD) 🥈": "SI=F",
         "Crude Oil 🛢️": "CL=F",
-        "Ethereum (ETH-USD) 💎": "ETH-USD",
+        "Ethereum (ETHUSD) 💎": "ETHUSD",
         "NIFTY 50 🇮🇳": "^NSEI",
         "BANK NIFTY 🇮🇳": "^NSEBANK",
         "SENSEX 🇮🇳": "^BSESN",
@@ -56,14 +56,14 @@ with col_ui1:
     ticker_symbol = assets_dict[selected_display]
 
 with col_ui2:
-    trading_style = st.selectbox("Modality Profile:", ["Scalping", "Intraday", "Swing", "Position"])
+    trading_style = st.selectbox("Modality Profile:", ["Scalping", "Intraday", "Swing", "Position", "Option"])
 
 with col_ui3:
     target_date = st.date_input("Fix Target Date:", current_time.date())
     target_time = st.time_input("Fix Analysis Time:", time(9, 15))
 
 with col_ui4:
-    lot_size = st.number_input("Lot Size / Quantity (e.g., 0.01, 0.1, 1.465):", min_value=0.001, max_value=1000.0, value=1.465, step=0.01, format="%.3f")
+    lot_size = st.number_input("Lot Size / Quantity (e.g., 0.01, 0.1, 1):", min_value=0.001, max_value=1000.0, value=1, step=0.01, format="%.3f")
 
 st.markdown("---")
 
